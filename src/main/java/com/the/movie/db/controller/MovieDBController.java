@@ -7,9 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Objects;
 
 @Controller
 public class MovieDBController {
@@ -19,26 +20,58 @@ public class MovieDBController {
 
     @GetMapping
     public String getAllMovies(Model model){
-        String prev = null ;
-        String next = String.valueOf(Integer.parseInt("1") + 1);
+
         MovieDTO response = this.service.getAll(String.format(MovieService.url.concat("1"),"movie"));
         model.addAttribute("results",response.getResults());
-        model.addAttribute("prev",prev);
-        model.addAttribute("next",next);
-        System.out.println("prev getAllMovies " + prev);
-        System.out.println("next  getAllMovies " + next);
+        model.addAttribute("prev",null);
+        model.addAttribute("next", String.valueOf(response.getPage() + 1));
+        model.addAttribute("page",response.getPage() );
+
         return "index";
     }
-    @GetMapping(value="/pageable" ,params = {"antes","despues","type"})
-    public String getPageable(Model model, @RequestParam(defaultValue = "1") String antes,@RequestParam(defaultValue = "2",required = false) String despues, @RequestParam(defaultValue = "movie") String type){
-        String prev = antes.equalsIgnoreCase("1") ? "null" : String.valueOf((Integer.parseInt(despues)-1)) ;
-        String next = String.valueOf(Integer.parseInt(despues) + 1);
-        System.out.println("prev getPageable" + antes);
-        System.out.println("next  getPageable" + despues);
-        MovieDTO response = this.service.getAll(String.format(MovieService.url.concat(prev),type));
-        model.addAttribute("prev",prev);
-        model.addAttribute("next",next);
-        model.addAttribute("results",response.getResults());
+    @GetMapping(value="/pageable" )
+    public String getPageable(Model model, @RequestParam(required = false) String antes,@RequestParam(required = false) String despues,
+                              HttpServletRequest request,
+                              @RequestParam(defaultValue = "movie") String type){
+        String page = request.getParameter("page");
+        System.out.println("PAGE PARAMETER {} " +page);
+        String search = null;
+        String prev = null;
+        String next = null;
+        if(Objects.nonNull(antes) && antes.equalsIgnoreCase("1")){
+            search = Integer.parseInt(page)<=1 ? null : String.valueOf(Integer.parseInt(page) - 1);
+            prev = Integer.parseInt(page)<=2 ? null : String.valueOf(Integer.parseInt(page) - 1);
+            next =String.valueOf(Integer.parseInt(page) + 1);
+
+            System.out.println("PARANETER1 PREV : {}" + prev);
+            System.out.println("PARANETER1 NEXT : {}" + next);
+            System.out.println("PARANETER1 SEARCH : {}" + search);
+        }else if(Objects.nonNull(despues) && despues.equalsIgnoreCase("2")){
+            search = String.valueOf(Integer.parseInt(page) + 1);
+            prev = Integer.parseInt(page)<=2 ? null : String.valueOf(Integer.parseInt(page) - 1);;
+            next = search;
+
+            System.out.println("PARANETER2 PREV : {}" + prev);
+            System.out.println("PARANETER2 NEXT : {}" + next);
+            System.out.println("PARANETER2 SEARCH : {}" + search);
+        }
+        if(Objects.nonNull(search)){
+            MovieDTO response = this.service.getAll(String.format(MovieService.url.concat(search),type));
+            model.addAttribute("prev",prev);
+            model.addAttribute("next",next);
+            model.addAttribute("page",response.getPage());
+            model.addAttribute("results",response.getResults());
+        }
+
         return "index";
+    }
+
+    @GetMapping("/search")
+    public String getById(Model model,@RequestParam String id){
+        ResultMovieDTO response = this.service.getById(Integer.parseInt(id));
+        model.addAttribute("title",response.getOriginal_title() + ": " + response.getId());
+        model.addAttribute("result",response);
+        System.out.println(response.toString());
+        return "movie";
     }
 }
