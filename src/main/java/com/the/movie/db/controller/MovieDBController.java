@@ -2,6 +2,7 @@ package com.the.movie.db.controller;
 
 import com.the.movie.db.dto.MovieDTO;
 import com.the.movie.db.dto.ResultMovieDTO;
+import com.the.movie.db.dto.SingleMovieDTO;
 import com.the.movie.db.service.MovieService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -68,7 +69,7 @@ public class MovieDBController {
 
     @GetMapping("/search")
     public String getById(Model model,@RequestParam String id){
-        ResultMovieDTO response = this.service.getById(Integer.parseInt(id));
+        SingleMovieDTO response = this.service.getById(Integer.parseInt(id));
         model.addAttribute("title",response.getOriginal_title() + ": " + response.getId());
         model.addAttribute("result",response);
         System.out.println(response.toString());
