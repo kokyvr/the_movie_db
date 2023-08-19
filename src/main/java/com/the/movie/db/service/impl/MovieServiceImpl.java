@@ -4,8 +4,9 @@ import com.the.movie.db.dto.MovieDTO;
 import com.the.movie.db.service.MovieService;
 import com.the.movie.db.utils.ConsumeApi;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-@Autowired
+@Service
 public class MovieServiceImpl implements MovieService {
 
     @Autowired
